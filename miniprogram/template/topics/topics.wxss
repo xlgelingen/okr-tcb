@@ -1,0 +1,21 @@
+/**topics.wxss**/
+.topics-item{
+  position: relative;
+  padding: 30rpx;
+  background-color: #e4e4e4;
+  line-height: 40rpx;
+  margin-bottom: 30rpx;
+  border-radius: 4px;
+}
+.item-time{
+  margin-top: 25rpx;
+  color: #999;
+}
+
+.done-logo{
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 180rpx;
+  height: 180rpx;
+}

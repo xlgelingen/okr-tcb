@@ -1,0 +1,20 @@
+<!--show.wxml-->
+<import src="/template/topics/topics" />
+
+<scroll-view class="scrollarea" scroll-y type="list">
+  <view class="page-container">
+    <!-- <view>{{todoId}}</view> -->
+    <view class="content-title">请选择关键成果KR（KeyResult）进行绑定</view>
+    <view class="content-card" wx:for="{{KRGroups}}" wx:key="index" wx:for-item="KRGroup">
+      <view class="card-title">目标：{{KRGroup[0].objective}}</view>
+      <view class="card-item {{item.active ? 'active' : ''}}" wx:for="{{KRGroup}}" wx:key="index" bindtap="selectKR" data-kr-id="{{item.id}}">
+        <view>{{item.content}}</view>
+      </view>
+    </view>
+    <button class="weui-btn weui-btn_primary content-btn" bindtap="saveTodoKR">提交</button>
+    <mp-dialog show="{{dialogShow}}" bindbuttontap="tapDialogButton" buttons="{{button}}">
+      <i role="img" title="成功" aria-describedby="tip_1" class="weui-icon-success weui-icon_msg"></i>
+      <view style="margin-top: 20rpx;">关联成功！即将跳转到Todo页</view>
+    </mp-dialog>
+  </view>
+</scroll-view>

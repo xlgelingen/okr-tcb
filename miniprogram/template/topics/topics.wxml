@@ -1,0 +1,28 @@
+<template name="topics">
+  <view class="topics-item" wx:for="{{topics}}" wx:key="unique" wx:if="{{!item.isCompleted}}" bindtap="operateDialog" data-item-id="{{item._id}}">
+    <view class="item-title">{{item.content}}</view>
+    <view class="item-time">• 创建时间：{{item.date_display}}
+    </view>
+    <view class="item-time" wx:if="{{item.completed_time}}">• 完成时间：{{item.completed_time}}</view>
+  </view>
+</template>
+
+<template name="topics-done">
+  <view class="topics-item" wx:for="{{topics}}" wx:key="unique" wx:if="{{item.isCompleted}}" data-item-id="{{item._id}}">
+    <view class="item-title">{{item.content}}</view>
+    <view class="item-time">• 创建时间：{{item.date_display}}
+    </view>
+    <view class="item-time" wx:if="{{item.completed_time}}">• 完成时间：{{item.completed_time}}</view>
+    <image src="/images/done.svg" class="done-logo" />
+  </view>
+</template>
+
+<template name="topics-all">
+  <view class="topics-item" wx:for="{{topics}}" wx:key="unique" bindtap="operateDialog" data-item-id="{{item.id}}" data-item-complete="{{item.completed_time ? true : false}}">
+    <view class="item-title">{{item.content}}</view>
+    <view class="item-time">• 创建时间：{{item.create_time}}
+    </view>
+    <view class="item-time" wx:if="{{item.completed_time}}">• 完成时间：{{item.completed_time}}</view>
+    <image src="/images/done.svg" class="done-logo" wx:if="{{item.completed_time}}"/>
+  </view>
+</template>

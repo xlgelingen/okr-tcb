@@ -1,0 +1,25 @@
+<scroll-view class="scrollarea" scroll-y type="list">
+  <view class="page-container">
+    <view class="topics-item" data-item-id="{{obj.id}}" data-item-complete="{{obj.completed_time ? true : false}}">
+      <view class="item-title">{{obj.content}}</view>
+      <view class="item-time">• 创建时间：{{obj.create_time}}
+      </view>
+      <view class="item-time" wx:if="{{obj.completed_time}}">• 完成时间：{{obj.completed_time}}</view>
+      <image src="/images/done.svg" class="done-logo" wx:if="{{obj.completed_time}}" />
+    </view>
+    <view class="kr-list">
+      <view class="kr-container {{item.isCompleted ? 'complete' : ''}}" wx:for="{{keyresults}}" wx:key="unique">
+        <view class="kr-item">
+          <view class="kr-title">{{item.content}}</view>
+          <view class="kr-tag" wx-if="{{item.isCompleted}}">已完成</view>
+          <view class="kr-tag" wx-if="{{!item.isCompleted}}" bindtap="markKR" data-kr-id="{{item.id}}">点击标记</view>
+        </view>
+        <view class="todo-item {{todo.todoComplete ? 'complete' : ''}}" wx:for="{{TodoKRs}}" wx:key="unique" wx:for-item="todo" wx-if="{{todo.keyresultId == item.id}}">
+          • {{todo.todoContent}}
+        </view>
+      </view>
+    </view>
+    <mp-actionSheet bindactiontap="btnClick" show="{{showDialog}}" actions="{{groups}}">
+    </mp-actionSheet>
+  </view>
+</scroll-view>

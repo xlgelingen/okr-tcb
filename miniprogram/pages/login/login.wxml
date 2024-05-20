@@ -1,0 +1,20 @@
+<view class="page-container">
+  <view class="user-section">
+    <view class="unLogin-container">
+      <button class="avatar-wrapper" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+        <image class="avatar-img" src="{{avatarUrl}}"></image>
+        <view class="avater-descrb">请点击选择头像</view>
+      </button>
+      <mp-form class="nickname-box">
+        <mp-cells>
+          <mp-cell title="昵称">
+            <input type="nickname" class="weui-input" model:value="{{nickName}}" placeholder="请输入昵称" />
+          </mp-cell>
+        </mp-cells>
+      </mp-form>
+    </view>
+  </view>
+  <!-- open-type="getUserInfo" 是一个特殊的属性，它用于触发小程序的用户信息授权弹窗。当用户点击这个按钮时，会触发微信客户端的用户信息授权弹窗，让用户选择是否授权小程序获取其用户信息（如昵称、头像等）。而 bindtap 事件只是简单的绑定了一个点击事件，不会触发微信客户端的用户信息授权弹窗，也不会获取用户的授权结果。 -->
+  <button class="login-btn" hover-class="login-btn_hover" open-type="getUserInfo" bindgetuserinfo="handleLogin">
+    授权登录使用</button>
+</view>

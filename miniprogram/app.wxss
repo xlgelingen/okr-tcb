@@ -1,0 +1,43 @@
+/**app.wxss**/
+@import './template/topics/topics.wxss';
+
+/**app.wxss**/
+page {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  height: 100vh;
+  font-size: 16px;
+  line-height: 1.6;
+  font-family: Arial;
+  box-sizing: border-box;
+  background: #f6f6f6;
+}
+.page-container {
+  min-height: 100%;
+  background-color: #fff;
+  padding: 60rpx 30rpx;
+}
+button {
+  background: initial;
+}
+
+button:focus{
+  outline: 0;
+}
+
+button::after{
+  border: none;
+}
+.content-title{
+  font-size: 14px;
+  color: #666;
+}
+.input-assemblies{
+  border: 2px solid #666;
+  padding: 8px;
+  box-sizing: border-box;
+  height: fit-content;
+  margin: 20rpx 0 40rpx;
+  /* width: 80%; */
+} 

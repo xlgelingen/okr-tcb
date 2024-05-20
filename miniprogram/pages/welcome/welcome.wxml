@@ -1,0 +1,15 @@
+<!--index.wxml-->
+<scroll-view class="scrollarea" scroll-y type="list">
+  <view class="page-container">
+    <view class="content-contauner">
+      <view class="content-title">目标和关键成果</view>
+      <view class="content-subtitle">Objective and Key Result</view>
+      <view class="content-text">目标：我想让网站打开速度快一点</view>
+      <view class="content-text">——成果：打开速度快30%</view>
+      <view class="content-text">————todo：替换较大的资源库</view>
+      <view class="content-text">————todo：JavaScript代码压缩</view>
+      <view class="content-text">————todo：图片资源压缩和代理</view>
+    </view>
+    <button class="weui-btn content-btn" type="primary" bindtap="goTodo">立即体验</button>
+  </view>
+</scroll-view>

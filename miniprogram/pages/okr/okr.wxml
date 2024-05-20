@@ -1,0 +1,10 @@
+<!--index.wxml-->
+<import src="/template/topics/topics" />
+<scroll-view class="scrollarea" scroll-y type="list">
+  <view class="page-container">
+    <button class="weui-btn content-btn" type="primary" bindtap="goAddOKR">添加OKR</button>
+    <template is="topics-all" data="{{topics}}" />
+    <mp-actionSheet bindactiontap="btnClick" show="{{showDialog}}" actions="{{filteredGroups}}">
+    </mp-actionSheet>
+  </view>
+</scroll-view>

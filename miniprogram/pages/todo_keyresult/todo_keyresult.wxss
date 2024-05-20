@@ -1,0 +1,38 @@
+/**show.wxss**/
+.scrollarea {
+  height: 100%;
+  flex: 1;
+  overflow-y: hidden;
+}
+
+.page-container {
+  position: relative;
+  background-color: #f5f5f5;
+}
+
+.content-card {
+  margin: 40rpx 0;
+}
+
+.card-title {
+  font-weight: 600;
+}
+
+.card-item {
+  padding: 20rpx;
+  margin: 20rpx 0;
+  background-color: #e4e4e4;
+  border-radius: 4px;
+}
+
+.card-item.active {
+  background-color: #333;
+  color: #fff;
+}
+
+.content-btn {
+  position: fixed;
+  bottom: 40rpx;
+  left: 50%;
+  transform: translateX(-50%);
+}

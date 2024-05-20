@@ -1,0 +1,23 @@
+<view class="topics-list">
+  <navigator class="topics-item" wx:key="key" wx:for="{{ topics }}" url="/pages/detail/detail?id={{topic._id}}" wx:for-item="topic">
+    <image class="topics-hd topics-avatar" src="{{topic.userInfo.avatarUrl}}"></image>
+    <view class="topics-bd">
+      <view class="topics-nickName">{{topic.userInfo.nickName}}</view>
+      <view class="topics-content">{{topic.content}}</view>
+      <view class="topics-resource">
+        <block wx:for="{{topic.imageUrl}}" wx:key="key" wx:for-item="url">
+          <image src="{{url}}" catchtap="handlePreviewImage" data-url="{{url}}" class="resource-item" mode="widthFix"></image>
+        </block>
+        <block wx:for="{{topic.videoUrl}}" wx:key="key" wx:for-item="url">
+          <video class="resource-item" src="{{url}}" id="{{'video_' + topic._id}}" controls="{{false}}">
+            <view class="resource-video-controls" data-id="{{'video_' + topic._id}}" catchtap="handlePreviewVideo"></view>
+          </video>
+        </block>
+      </view>
+      <view class="topics-info">
+        <text class="topics-reply-date">{{topic.date_display}}</text>
+        <text wx:if="{{topic.reply_number}}" class="topics-reply-number">{{topic.reply_number}} 回复</text>
+      </view>
+    </view>
+  </navigator>
+</view>

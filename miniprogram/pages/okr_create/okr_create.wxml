@@ -1,0 +1,22 @@
+<scroll-view class="scrollarea" scroll-y type="list">
+  <view class="page-container">
+    <view class="content-title">Objective 目标：</view>
+    <view class="content-item-box">
+      <input class="weui-input content-item-input" placeholder="请输入你的目标" model:value="{{objValue}}" />
+      <button class="weui-btn weui-btn_mini content-item-btn" type="primary" bindtap="addKRItem">+</button>
+    </view>
+    <view class="kr-container" wx:for="{{keyresults}}" wx:key="unique">
+      <view class="content-title">Keyresult 成果{{index+1}}：</view>
+      <view class="content-item-box">
+        <input class="weui-input content-item-input" placeholder="请输入你的目标" value="{{item}}" bindinput="handleKRInput" data-index="{{index}}"></input>
+        <button class="weui-btn weui-btn_mini content-item-btn" type="primary" bindtap="delKR" data-kr-iD="{{index}}">-</button>
+      </view>
+    </view>
+    <button class="weui-btn weui-btn_primary content-btn" bindtap="addOKR">新增</button>
+    <mp-dialog show="{{dialogShow}}" bindbuttontap="tapDialogButton" buttons="{{button}}">
+      <i role="img" title="成功" aria-describedby="tip_1" class="weui-icon-success weui-icon_msg"></i>
+      <view style="margin-top: 20rpx;">添加成功！即将跳转到OKR页</view>
+    </mp-dialog>
+    <mp-toptips msg="{{error}}" type="error" show="{{showToptips}}"></mp-toptips>
+  </view>
+</scroll-view>

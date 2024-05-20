@@ -1,0 +1,11 @@
+<!--index.wxml-->
+<import src="../../template/topics/topics.wxml" />
+<scroll-view class="scrollarea" scroll-y type="list">
+  <view class="page-container">
+    <view class="content-title">你必须要不得不做的事</view>
+    <input class="weui-input input-assemblies" placeholder="请输入你需要完成的事情" bindconfirm="addTodo" model:value="{{inputValue}}"/>
+    <template is="topics" data="{{topics}}" />
+    <mp-actionSheet bindactiontap="btnClick" show="{{showDialog}}" actions="{{groups}}">
+    </mp-actionSheet>
+  </view>
+</scroll-view>

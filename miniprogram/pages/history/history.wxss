@@ -1,0 +1,8 @@
+.scrollarea {
+  height: 100%;
+  flex: 1;
+  overflow-y: hidden;
+}
+.content-title{
+  margin-bottom: 20rpx;
+}

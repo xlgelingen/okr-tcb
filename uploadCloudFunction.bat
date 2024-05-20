@@ -1,0 +1,1 @@
+"D:\software\微信web开发者工具\cli.bat" cloud functions deploy --e cloud1-4gbmug537f69916c --n quickstartFunctions --r --project "C:\Users\Liu\Desktop\okr-tcb" --report_first --report

@@ -1,0 +1,8 @@
+<!--node.wxml-->
+<import src="/template/topics/topics" />
+<scroll-view class="scrollarea" scroll-y type="list">
+  <view class="page-container">
+    <view class="content-title">已经完成的Todos，真棒~</view>
+    <template is="topics-done" data="{{topics}}" />
+  </view>
+</scroll-view>
