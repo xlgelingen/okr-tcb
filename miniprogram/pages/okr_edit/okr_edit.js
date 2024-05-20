@@ -1,9 +1,12 @@
 var app = getApp();
+const db = wx.cloud.database();
+import { formatTime } from '../../utils/utils';
 Page({
   data: {
-    token: "1",
     objValue: null,
     keyresults: [],
+    originKR: [],
+    originObj: null,
     objId: null,
     dialogShow: false,
     button: [{ text: '确定' }]
@@ -11,7 +14,6 @@ Page({
   onLoad: function (options) {
     this.setData({
       objId: options.objId,
-      token: app.globalData.token
     })
     this.getData();
   },
@@ -19,50 +21,49 @@ Page({
     const objId = this.data.objId;
     await this.getObj(objId);
     await this.getKR(objId);
-    console.log('origin:', objId, this.data.keyresults)
+    const krs = this.data.keyresults;
+    const originKR = JSON.parse(JSON.stringify(krs));
+    this.setData({
+      originKR: originKR
+    })
+    console.log('originKR:', this.data.originKR)
   },
-  getObj(id) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: 'http://127.0.0.1:3000/objective/' + id,
-        method: 'GET',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        success: (res) => {
-          console.log('getObj成功！')
-          this.setData({
-            objValue: res.data.data.content
-          })
-          resolve();
-        },
-        fail: (error) => {
-          console.error('Failed to fetch objective:', error);
-          reject(error);
-        }
+  async getObj(id) {
+    await db.collection('objective').orderBy('createTime', 'desc').where({
+      _id: id
+    }).get().then(res => {
+      let objValue = res.data[0].content;
+      const originObj = JSON.parse(JSON.stringify(objValue));
+      console.log('getObj成功!', res.data)
+      this.setData({
+        objValue: objValue,
+        originObj: originObj
       })
+      console.log('objValue', this.data.objValue)
+    }).catch(err => {
+      wx.showToast({
+        icon: 'none',
+        title: '查询记录失败'
+      })
+      console.error('[数据库] [查询记录] 失败：', err)
     })
   },
-  getKR(objId) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: 'http://127.0.0.1:3000/keyresult/objId/' + objId,
-        method: 'GET',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        success: (res) => {
-          console.log('getKR成功！')
-          this.setData({
-            keyresults: res.data.data
-          })
-          resolve();
-        },
-        fail: (error) => {
-          console.error('Failed to fetch objective:', error);
-          reject(error);
-        }
+  async getKR(objId) {
+    await db.collection('keyresult').orderBy('createTime', 'desc').where({
+      objId: objId
+    }).get().then(res => {
+      console.log('getKR成功！')
+      let keyresults = res.data;
+      this.setData({
+        keyresults: keyresults,
       })
+      console.log('keyresults', this.data.keyresults)
+    }).catch(err => {
+      wx.showToast({
+        icon: 'none',
+        title: '查询记录失败'
+      })
+      console.error('[数据库] [查询记录] 失败：', err)
     })
   },
   addKRItem() {
@@ -75,8 +76,8 @@ Page({
     const index = e.currentTarget.dataset.index;
     const value = e.detail.value;
     let keyresults = this.data.keyresults;
-    console.log(this.data.objId)
-    keyresults[index].objId = Number(this.data.objId);
+    // console.log(this.data.objId)
+    // keyresults[index].objId = this.data.objId;
     keyresults[index].content = value;
     this.setData({
       keyresults: keyresults
@@ -93,107 +94,134 @@ Page({
     // console.log('delKR/kr', this.data.keyresults)
   },
   async editOKR() {
-    console.log('objValue', this.data.objValue)
-    console.log('keyresults', this.data.keyresults)
+    wx.showLoading({
+      title: '',
+    });
+    const originObj = this.data.originObj
     const objContent = this.data.objValue;
     const keyresults = this.data.keyresults;
-    const objId = this.data.objId
-    await this.removeObj(objId);
-    await this.removeKR(objId);
-    await this.addObj(objId, objContent);
-    await this.addKR(objId, keyresults)
+    const originKR = this.data.originKR;
+    const objId = this.data.objId;
+    // console.log('save/objContent', objContent)
+    // console.log('save/keyresults', keyresults)
+    // console.log('save/originKR', originKR)
+    // console.log('save/objId', objId)
+    const itemsToDelete = [];
+    const itemsToCreate = [];
+    const itemsToUpdate = [];
+    // 找出需要删除的项
+    for (const kr of originKR) {
+      if (!keyresults.find(item => item._id === kr._id)) {
+        itemsToDelete.push(kr._id);
+      }
+    }
+    // 找出需要创建的项
+    for (const kr of keyresults) {
+      if (!originKR.find(item => item._id === kr._id)) {
+        itemsToCreate.push(kr);
+      }
+    }
+    // 找出需要更新的项
+    for (const kr of keyresults) {
+      const originalKR = originKR.find(item => item._id === kr._id);
+      if (originalKR && originalKR.content !== kr.content) {
+        itemsToUpdate.push(kr);
+      }
+    }
+    console.log('需要删除的项:', itemsToDelete);
+    console.log('需要创建的项:', itemsToCreate);
+    console.log('需要更新的项:', itemsToUpdate);
+    // 执行删除操作
+    for (const itemId of itemsToDelete) {
+      await this.removeKR(itemId);
+    }
+    // 执行创建操作
+    for (const item of itemsToCreate) {
+    const content = item.content
+      await this.createKR(objId, content);
+    }
+    // 执行更新操作
+    for (const item of itemsToUpdate) {
+      await this.updataKR(item);
+    }
+    // 执行更新操作
+    if (originObj !== objContent) {
+      await this.updataObj(objId, objContent);
+    }
+    wx.hideLoading();
     this.setData({
       dialogShow: true,
     })
   },
-  removeKR(objId) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: 'http://127.0.0.1:3000/keyresult',
-        method: 'DELETE',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        data: {
-          objId: objId,
-        },
-        success: (res) => {
-          console.log('删除KR成功')
-          resolve();
-        },
-        fail: (error) => {
-          console.error('Failed to fetch objective:', error);
-          reject(error);
-        }
+  async createKR(objId, content) {
+    let date = new Date();
+    let date_display = formatTime(date);
+    let createTime = db.serverDate();
+    await db.collection('keyresult').add({
+      data: {
+        objId: objId,
+        content: content,
+        date_display: date_display,
+        createTime: createTime,
+        isCompleted: false
+      }
+    }).then(res => {
+      console.log('添加KR成功: ')
+    }).catch(err => {
+      wx.showToast({
+        icon: 'none',
+        title: '添加失败'
       })
+      console.error('添加失败：', err)
     })
   },
-  removeObj(objId) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: 'http://127.0.0.1:3000/objective/' + objId,
-        method: 'DELETE',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        success: (res) => {
-          console.log('删除Obj成功')
-          resolve();
-        },
-        fail: (error) => {
-          console.error('Failed to fetch objective:', error);
-          reject(error);
-        }
+  async removeKR(itemId) {
+    await db.collection('keyresult').where({
+      _id: itemId
+    }).remove().then(res => {
+      console.log('删除KR成功: ')
+    }).catch(err => {
+      wx.showToast({
+        icon: 'none',
+        title: '删除失败'
       })
+      console.error('删除失败：', err)
     })
   },
-  addObj(id, content) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: 'http://127.0.0.1:3000/objective',
-        method: 'POST',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        data: {
-          id: id,
-          content: content,
-        },
-        success: (res) => {
-          console.log('添加目标成功')
-          this.setData({
-            objId: res.data.data.id
-          })
-          resolve();
-        },
-        fail: (error) => {
-          console.error('Failed to fetch objective:', error);
-          reject(error);
-        }
+  async updataKR(kr) {
+    const _id = kr._id;
+    const content = kr.content
+    await db.collection('keyresult').where({
+      _id: _id
+    }).update({
+      data: {
+        content: content
+      }
+    }).then(res => {
+      console.log('更新KR成功: ')
+    }).catch(err => {
+      wx.showToast({
+        icon: 'none',
+        title: '更新失败'
       })
+      console.error('更新失败：', err)
     })
   },
-  addKR(objId, keyresults) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: 'http://127.0.0.1:3000/keyresult',
-        method: 'POST',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        data: {
-          objId: objId,
-          keyresults: keyresults,
-        },
-        success: (res) => {
-          console.log('添加KR成功')
-          resolve();
-        },
-        fail: (error) => {
-          console.error('Failed to fetch objective:', error);
-          reject(error);
-        }
+  async updataObj(objId, objContent) {
+    await db.collection('objective').where({
+      _id: objId
+    }).update({
+      data: {
+        content: objContent
+      }
+    }).then(res => {
+      console.log('更新OBJ成功: ')
+    }).catch(err => {
+      wx.showToast({
+        icon: 'none',
+        title: '更新OBJ失败'
       })
+      console.error('更新OBJ失败：', err)
     })
   },
   tapDialogButton(e) {

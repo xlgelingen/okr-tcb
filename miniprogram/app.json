@@ -1,8 +1,8 @@
 {
   "pages": [
+    "pages/okr/okr",
     "pages/todo/todo",
     "pages/welcome/welcome",
-    "pages/okr/okr",
     "pages/todo_keyresult/todo_keyresult",
     "pages/history/history",
     "pages/okr_create/okr_create",

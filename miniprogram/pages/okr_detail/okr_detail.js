@@ -1,7 +1,8 @@
 var app = getApp();
+const db = wx.cloud.database();
+import { formatTime } from '../../utils/utils';
 Page({
   data: {
-    token: "1",
     obj: null,
     objId: null,
     keyresults: [],
@@ -15,22 +16,22 @@ Page({
   },
   onLoad: function (options) {
     this.setData({
-      token: app.globalData.token,
       objId: options.objId
     })
     this.getData();
   },
   getData: async function () {
+    wx.showLoading({
+      title: '',
+    });
     const objId = this.data.objId;
     await this.getObj(objId);
     await this.getKR(objId);
     const keyresults = this.data.keyresults;
-    // console.log('keyresults',keyresults);
-    this.getTodoKRs(11);
     let TodoKRs = [];
     await Promise.all(keyresults.map(async (item) => {
       try {
-        const todoKRs = await this.getTodoKRs(item.id);
+        const todoKRs = await this.getTodoKRs(item._id);
         TodoKRs = [...TodoKRs, ...todoKRs]
       } catch (error) {
         console.error('Failed to fetch todo content:', error);
@@ -39,8 +40,9 @@ Page({
     await Promise.all(TodoKRs.map(async (item) => {
       try {
         const todo = await this.getTodo(item.todoId);
-        item.todoContent = todo.content; 
-        item.todoComplete = todo.isCompleted; 
+        console.log('todo', todo)
+        item.todoContent = todo[0].content;
+        item.todoComplete = todo[0].isCompleted;
       } catch (error) {
         console.error('Failed to fetch todo content:', error);
       }
@@ -48,102 +50,82 @@ Page({
     this.setData({
       TodoKRs: TodoKRs
     })
-    console.log('keyresults', this.data.keyresults);
-    console.log('TodoKRs', this.data.TodoKRs);
+    wx.hideLoading();
+    console.log('getData/keyresults', this.data.keyresults);
+    console.log('getData/TodoKRs', this.data.TodoKRs);
   },
-  getObj(id) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: 'http://127.0.0.1:3000/objective/' + id,
-        method: 'GET',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        success: (res) => {
-          console.log('getObj成功！')
-          this.setData({
-            obj: res.data.data
-          })
-          resolve();
-        },
-        fail: (error) => {
-          console.error('Failed to fetch objective:', error);
-          reject(error);
-        }
+  async getObj(id) {
+    await db.collection('objective').orderBy('createTime', 'desc').where({
+      _id: id
+    }).get().then(res => {
+      let obj = res.data[0];
+      console.log('getObj成功!', res.data)
+      this.setData({
+        obj: obj,
       })
+      // console.log('objValue', this.data.objValue)
+    }).catch(err => {
+      wx.showToast({
+        icon: 'none',
+        title: '查询记录失败'
+      })
+      console.error('[数据库] [查询记录] 失败：', err)
     })
   },
-  getKR(objId) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: 'http://127.0.0.1:3000/keyresult/objId/' + objId,
-        method: 'GET',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        success: (res) => {
-          console.log('getKR成功！')
-          this.setData({
-            keyresults: res.data.data
-          })
-          resolve();
-        },
-        fail: (error) => {
-          console.error('Failed to fetch objective:', error);
-          reject(error);
-        }
+  async getKR(objId) {
+    await db.collection('keyresult').orderBy('createTime', 'desc').where({
+      objId: objId
+    }).get().then(res => {
+      console.log('getKR成功！')
+      let keyresults = res.data;
+      this.setData({
+        keyresults: keyresults,
       })
+      // console.log('keyresults', this.data.keyresults)
+    }).catch(err => {
+      wx.showToast({
+        icon: 'none',
+        title: '查询记录失败'
+      })
+      console.error('[数据库] [查询记录] 失败：', err)
     })
   },
-  getTodoKRs(keyresultId) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: 'http://127.0.0.1:3000/todo-keyresult/select',
-        method: 'POST',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        data: {
-          keyresultId: keyresultId
-        },
-        success: (res) => {
-          // const datas = res.data.data;
-          // const todoKRs = [...this.data.TodoKRs, ...datas]
-          // this.setData({
-          //   TodoKRs: todoKRs
-          // })
-          // console.log('getTodoKRs成功！')
-          // resolve();
-          console.log('getTodoKRs成功！',res.data.data)
-          resolve(res.data.data);
-        },
-        fail: (error) => {
-          console.error('Failed to fetch objective:', error);
-          reject(error);
-        }
-      })
-    })
+  async getTodoKRs(keyresultId) {
+    try {
+      const res = await db.collection('todo_keyresult').orderBy('createTime', 'desc').where({
+        keyresultId: keyresultId
+      }).get();
+      console.log('getTodoKRs成功！');
+      let TodoKRs = res.data;
+      // console.log('TodoKRs', TodoKRs);
+      return TodoKRs;
+    } catch (err) {
+      wx.showToast({
+        icon: 'none',
+        title: '查询记录失败'
+      });
+      console.error('[数据库] [查询记录] 失败：', err);
+      throw err; // 可选：继续将错误抛出以在调用方进行处理
+    }
   },
-  getTodo(id) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: 'http://127.0.0.1:3000/todo/' + id,
-        method: 'GET',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        success: (res) => {
-          // console.log('getTodo成功！',res.data.data[0])
-          resolve(res.data.data[0]);
-        },
-        fail: (error) => {
-          console.error('Failed to fetch objective:', error);
-          reject(error);
-        }
-      })
-    })
+  async getTodo(id) {
+    try {
+      const res = await db.collection('todo').where({
+        _id: id
+      }).get();
+      console.log('getTodo成功！');
+      let todo = res.data;
+      return todo;
+    } catch (err) {
+      wx.showToast({
+        icon: 'none',
+        title: '查询记录失败'
+      });
+      console.error('[数据库] [查询记录] 失败：', err);
+      throw err; // 可选：继续将错误抛出以在调用方进行处理
+    }
   },
-  markKR(e){
+  markKR(e) {
     const KRId = e.currentTarget.dataset.krId;
     console.log(KRId);
     this.setData({
@@ -151,43 +133,52 @@ Page({
       KRId: KRId
     })
   },
-  btnClick: function (e) {
+  async btnClick(e) {
     var oprateId = e.detail.value;
     const KRId = this.data.KRId;
     console.log('oprateId', oprateId);
     if (oprateId == 1) {
       console.log('oprateId is 1');
-      wx.request({
-        url: 'http://127.0.0.1:3000/keyresult/complete/' + KRId,
-        method: 'PATCH',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        success: (res) => {
-          this.getData();
-          this.setData({
-            showDialog: false,
-          });
-        },
+      let date = new Date();
+      let completed_time = formatTime(date);
+      await db.collection('keyresult').where({
+        _id: KRId
+      }).update({
+        data: {
+          completed_time: completed_time,
+          isCompleted: true
+        }
+      }).then(res => {
+        this.getData();
+        this.setData({
+          showDialog: false,
+        });
+      }).catch(err => {
+        wx.showToast({
+          icon: 'none',
+          title: '更新失败'
+        })
+        console.error('更新失败：', err)
       })
     }
     if (oprateId == 2) {
       console.log('oprateId is 2');
-      wx.request({
-        url: 'http://127.0.0.1:3000/keyresult/',
-        method: 'DELETE',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        data:{
-          id: KRId
-        },
-        success: (res) => {
+      db.collection('keyresult').where({
+        _id: KRId
+      }).remove({
+        success: res => {
           this.getData();
           this.setData({
             showDialog: false,
           });
         },
+        fail: err => {
+          wx.showToast({
+            icon: 'none',
+            title: '删除失败'
+          })
+          console.error('删除失败', err)
+        }
       })
     }
   },

@@ -18,6 +18,9 @@ Page({
     this.getData();
   },
   getData: function () {
+    wx.showLoading({
+      title: '',
+    });
     db.collection('todo').orderBy('createTime', 'desc').get({
       success: res => {
         let topics = res.data;
@@ -26,7 +29,7 @@ Page({
           topics: topics
         })
         console.log('topics', this.data.topics)
-        typeof cb === 'function' && cb();
+        wx.hideLoading();
       },
       fail: err => {
         wx.showToast({
@@ -34,6 +37,7 @@ Page({
           title: '查询记录失败'
         })
         console.error('[数据库] [查询记录] 失败：', err)
+        wx.hideLoading();
       }
     })
   },
@@ -134,6 +138,7 @@ Page({
     }
   },
   delTodoKR(todoId) {
+    console.log("调用delTodoKR")
     db.collection('todo_keyresult').where({
       todoId: todoId
     }).remove({

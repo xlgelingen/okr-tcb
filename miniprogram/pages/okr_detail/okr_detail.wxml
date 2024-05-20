@@ -2,7 +2,7 @@
   <view class="page-container">
     <view class="topics-item" data-item-id="{{obj.id}}" data-item-complete="{{obj.completed_time ? true : false}}">
       <view class="item-title">{{obj.content}}</view>
-      <view class="item-time">• 创建时间：{{obj.create_time}}
+      <view class="item-time">• 创建时间：{{obj.date_display}}
       </view>
       <view class="item-time" wx:if="{{obj.completed_time}}">• 完成时间：{{obj.completed_time}}</view>
       <image src="/images/done.svg" class="done-logo" wx:if="{{obj.completed_time}}" />
@@ -12,9 +12,9 @@
         <view class="kr-item">
           <view class="kr-title">{{item.content}}</view>
           <view class="kr-tag" wx-if="{{item.isCompleted}}">已完成</view>
-          <view class="kr-tag" wx-if="{{!item.isCompleted}}" bindtap="markKR" data-kr-id="{{item.id}}">点击标记</view>
+          <view class="kr-tag" wx-if="{{!item.isCompleted}}" bindtap="markKR" data-kr-id="{{item._id}}">点击标记</view>
         </view>
-        <view class="todo-item {{todo.todoComplete ? 'complete' : ''}}" wx:for="{{TodoKRs}}" wx:key="unique" wx:for-item="todo" wx-if="{{todo.keyresultId == item.id}}">
+        <view class="todo-item {{todo.todoComplete ? 'complete' : ''}}" wx:for="{{TodoKRs}}" wx:key="unique" wx:for-item="todo" wx-if="{{todo.keyresultId == item._id}}">
           • {{todo.todoContent}}
         </view>
       </view>

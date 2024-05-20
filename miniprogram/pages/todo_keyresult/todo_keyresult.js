@@ -1,4 +1,6 @@
 var app = getApp();
+const db = wx.cloud.database();
+import { formatTime } from '../../utils/utils';
 Page({
   data: {
     todoId: null,
@@ -14,148 +16,139 @@ Page({
     isSelect: false
   },
   onLoad: async function (options) {
-    console.log('options',options)
+    console.log('onLoad')
+    console.log('options', options)
     this.setData({
       todoId: options.todoId,
     })
+    console.log('todoId', this.data.todoId)
     // await this.getData();
   },
-  onShow: async function (options) {
-    // console.log('options',options)
-    // this.setData({
-    //   todoId: options.todoId,
-    // })
-    // await this.getData();
+  onShow: async function () {
+    console.log('onShow')
+    await this.getData();
   },
-  getData: async function () {
+  async getData() {
+    wx.showLoading({
+      title: '',
+    });
     await this.getObjective();
     await this.getKR();
     await this.getTodoKR();
-    // console.log('TodoKR', this.data.TodoKR)
-    // console.log('keyResults', this.data.keyResults)
+    // console.log('getData/TodoKR', this.data.TodoKR)
+    // console.log('getData/keyResults', this.data.keyResults)
     const KRIdArr = []
-    // console.log('获取数据/keyresultIdArr0',KRIdArr)
+    // console.log('获取数据/keyresultIdArr0', KRIdArr)
     this.data.TodoKR.forEach((item) => {
       if (item.todoId == this.data.todoId) {
         this.data.keyResults.forEach((kr) => {
-          if (kr.id == item.keyresultId) {
+          if (kr._id == item.keyresultId) {
             kr.active = true;
-            KRIdArr.push(kr.id)
-            // this.setData({
-            //   keyresultIdArr: KRIdArr
-            // })
+            KRIdArr.push(kr._id)
           }
         })
       }
     })
-    let groups = [];
+    let groups = {};
     this.data.keyResults.forEach((item) => {
       const { objId } = item;
+      // console.log('objId', objId)
       if (!groups[objId]) {
         groups[objId] = [];
       }
       groups[objId].push(item);
     });
-    groups = groups.filter((item) => {
-      return item !== null
-    })
     // console.log('groups', groups)
-    const krGroups = groups.map((item) => {
-      const objId = item[0].objId;
-      // console.log('objId', objId)
+    let krGroups = [];
+    for (let objId in groups) {
       const obj = this.data.objective.filter((obj) => {
         return obj.id == objId;
-      })
-      return item.map((project) => {
+      });
+      krGroups.push(groups[objId].map((project) => {
         return {
           ...project,
-          objective: obj[0].content
-        }
-      })
-    })
+          objective: obj.content
+        };
+      }));
+    }
+    // console.log('krGroups', krGroups)
     this.setData({
       KRGroups: krGroups,
       keyresultIdArr: KRIdArr,
       selectKRArr: [...KRIdArr],
     })
-    // console.log('获取数据/keyresultIdArr',this.data.keyresultIdArr)
+    wx.hideLoading();
+    // console.log('获取数据/keyresultIdArr', this.data.keyresultIdArr)
   },
-  getObjective() {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: 'http://127.0.0.1:3000/objective',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        success: (res) => {
-          // console.log('getObjective/res', res.data)
-          this.setData({
-            objective: res.data.data
-          })
-          resolve();
-        },
-        fail: (error) => {
-          console.error('Failed to fetch objective:', error);
-          reject(error);
-        }
+  async getObjective() {
+    await db.collection('objective')
+      .orderBy('createTime', 'desc')
+      .get()
+      .then(res => {
+        let objective = res.data;
+        console.log('获取obj成功: ');
+        this.setData({
+          objective: objective
+        });
+        console.log('objective', this.data.objective);
       })
+      .catch(err => {
+        wx.showToast({
+          icon: 'none',
+          title: '查询记录失败'
+        });
+        console.error('[数据库] [查询记录] 失败：', err);
+      });
+  },
+  async getKR() {
+    await db.collection('keyresult').orderBy('createTime', 'desc').get().then(res => {
+      let keyresult = res.data;
+      console.log('获取keyresult成功: ')
+      this.setData({
+        keyResults: keyresult
+      })
+      console.log('keyResults', this.data.keyResults)
+    }).catch(err => {
+      wx.showToast({
+        icon: 'none',
+        title: '查询记录失败'
+      })
+      console.error('[数据库] [查询记录] 失败：', err)
     })
   },
-  getKR() {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: 'http://127.0.0.1:3000/keyresult',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        success: (res) => {
-          this.setData({
-            keyResults: res.data.data
-          });
-          resolve();
-        },
-        fail: (error) => {
-          console.error('Failed to fetch objective:', error);
-          reject(error);
-        }
+  async getTodoKR() {
+    await db.collection('todo_keyresult').orderBy('createTime', 'desc').get().then(res => {
+      let TodoKR = res.data;
+      console.log('获取TodoKR成功: ')
+      this.setData({
+        TodoKR: TodoKR
       })
-    })
-  },
-  getTodoKR() {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: 'http://127.0.0.1:3000/todo-keyresult',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        success: (res) => {
-          this.setData({
-            TodoKR: res.data.data
-          });
-          resolve();
-        },
-        fail: (error) => {
-          console.error('Failed to fetch objective:', error);
-          reject(error);
-        }
+      console.log('TodoKR', this.data.TodoKR)
+    }).catch(err => {
+      wx.showToast({
+        icon: 'none',
+        title: '查询记录失败'
       })
+      console.error('[数据库] [查询记录] 失败：', err)
     })
   },
   selectKR(e) {
     const keyresultId = e.currentTarget.dataset.krId;
     const KRGroups = this.data.KRGroups;
+    // console.log('选择/keyresultId', keyresultId)
+    // console.log('选择/KRGroups', KRGroups)
     // let selectKR = [...this.data.keyresultIdArr];
     let selectKR = this.data.selectKRArr;
     KRGroups.forEach(group => {
       group.forEach(item => {
-        if (item.id === keyresultId) {
+        if (item._id === keyresultId) {
           item.active = !item.active;
           if (item.active) {
-            selectKR.push(item.id);
+            selectKR.push(item._id);
           }
           if (!item.active) {
             selectKR = selectKR.filter((kr) => {
-              return kr !== item.id
+              return kr !== item._id
             });
           }
         }
@@ -165,10 +158,13 @@ Page({
       KRGroups: KRGroups,
       selectKRArr: selectKR,
     });
-    // console.log('选择/keyresultIdArr', this.data.keyresultIdArr)
-    // console.log('选择/selectKR', selectKR)
+    console.log('选择/keyresultIdArr', this.data.keyresultIdArr)
+    console.log('选择/selectKR', this.data.selectKRArr)
   },
   async saveTodoKR() {
+    wx.showLoading({
+      title: '',
+    });
     const todoId = this.data.todoId;
     const TodoKR = this.data.TodoKR;
     const keyresultIdArr = this.data.keyresultIdArr;
@@ -188,56 +184,45 @@ Page({
       await this.removeTodoKR(itemId);
     }
     // 执行创建操作
-    await this.createTodoKR(todoId, itemsToCreate);
+    for (const itemId of itemsToCreate) {
+      await this.createTodoKR(todoId, itemId);
+    }
     this.getData();
+    wx.hideLoading();
     this.setData({
       dialogShow: true,
     })
   },
-  removeTodoKR(keyresultId) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: 'http://127.0.0.1:3000/todo-keyresult',
-        method: 'DELETE',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        data: {
-          keyresultId: keyresultId
-        },
-        success: (res) => {
-          console.log('删除成功')
-          resolve();
-        },
-        fail: (error) => {
-          console.error('Failed to fetch objective:', error);
-          reject(error);
-        }
-      })
+  async removeTodoKR(keyresultId) {
+    await db.collection('todo_keyresult').where({
+      keyresultId: keyresultId
+    }).remove({
+      success: res => {
+        console.log('删除TodoKR成功: ')
+      },
+      fail: err => {
+        wx.showToast({
+          icon: 'none',
+          title: '删除失败'
+        })
+        console.error('删除失败：', err)
+      }
     })
   },
-  createTodoKR(todoId, keyresultIdArr) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: 'http://127.0.0.1:3000/todo-keyresult',
-        method: 'POST',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        data: {
-          todoId: todoId,
-          keyresultIdArr: keyresultIdArr
-        },
-        success: (res) => {
-          console.log('添加成功')
-          resolve();
-        },
-        fail: (error) => {
-          console.error('Failed to fetch objective:', error);
-          reject(error);
-        }
+  async createTodoKR(todoId, keyresultId) {
+    await db.collection('todo_keyresult').add({
+      data: {
+        todoId: todoId,
+        keyresultId: keyresultId,
+      }}).then(res => {
+        console.log('添加TodoKR成功: ')
+      }).catch(err => {
+        wx.showToast({
+          icon: 'none',
+          title: '添加失败'
+        })
+        console.error('添加失败', err)
       })
-    })
   },
   tapDialogButton(e) {
     this.setData({

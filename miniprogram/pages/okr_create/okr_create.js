@@ -1,19 +1,16 @@
 var app = getApp();
+const db = wx.cloud.database();
+import { formatTime } from '../../utils/utils';
 Page({
   data: {
-    token: "1",
     objValue: null,
     keyresults: [''],
+    KRSArr: [''],
     objId: null,
     dialogShow: false,
     button: [{ text: '确定' }],
     showToptips: false,
     error: ''
-  },
-  onLoad: function (options) {
-    this.setData({
-      token: app.globalData.token
-    })
   },
   addKRItem() {
     this.setData({
@@ -52,61 +49,56 @@ Page({
       })
       return;
     }
+    wx.showLoading({
+      title: "插入中",
+      mask: true
+    })
     await this.addObj(objContent);
     const objId = this.data.objId
-    // console.log('objId',objId)
+    console.log('objId', objId)
     await this.addKR(objId, keyresults)
+    wx.hideLoading()
     this.setData({
       dialogShow: true,
     })
   },
-  addObj(content) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: 'http://127.0.0.1:3000/objective',
-        method: 'POST',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        data: {
-          content: content,
-        },
-        success: (res) => {
-          console.log('添加目标成功')
-          this.setData({
-            objId: res.data.data.id
-          })
-          resolve();
-        },
-        fail: (error) => {
-          console.error('Failed to fetch objective:', error);
-          reject(error);
-        }
+  async addObj(content) {
+    let date = new Date();
+    let date_display = formatTime(date);
+    let createTime = db.serverDate();
+    await db.collection('objective').add({
+      data: {
+        content: content,
+        createTime: createTime,
+        date_display: date_display,
+        isCompleted: false
+      }
+    }).then(res => {
+      console.log('添加目标成功')
+      console.log('addObj/res', res)
+      this.setData({
+        objId: res._id
       })
     })
   },
-  addKR(objId, keyresults) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: 'http://127.0.0.1:3000/keyresult',
-        method: 'POST',
-        header: {
-          'Authorization': `Bearer ${this.data.token}`,
-        },
-        data: {
-          objId: objId,
-          keyresults: keyresults,
-        },
-        success: (res) => {
-          console.log('添加KR成功')
-          resolve();
-        },
-        fail: (error) => {
-          console.error('Failed to fetch objective:', error);
-          reject(error);
-        }
+  async addKR(objId, keyresults) {
+    let date = new Date();
+    let date_display = formatTime(date);
+    let createTime = db.serverDate();
+    let isCompleted = false;
+    const promises = keyresults.map(async (item) => {
+      const content = item;
+      const data = { content, objId, date_display, createTime, isCompleted };
+      return await db.collection("keyresult").add({ data });
+    });
+    await Promise.all(promises)
+      .then(res => {
+        console.log('添加KR成功');
+        console.log('addKR/res', res);
       })
-    })
+      .catch(err => {
+        console.error('添加KR失败', err);
+      });
   },
   tapDialogButton(e) {
     this.setData({

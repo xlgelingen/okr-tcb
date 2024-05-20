@@ -1,13 +1,11 @@
-<!--show.wxml-->
 <import src="/template/topics/topics" />
 
 <scroll-view class="scrollarea" scroll-y type="list">
   <view class="page-container">
-    <!-- <view>{{todoId}}</view> -->
     <view class="content-title">请选择关键成果KR（KeyResult）进行绑定</view>
     <view class="content-card" wx:for="{{KRGroups}}" wx:key="index" wx:for-item="KRGroup">
       <view class="card-title">目标：{{KRGroup[0].objective}}</view>
-      <view class="card-item {{item.active ? 'active' : ''}}" wx:for="{{KRGroup}}" wx:key="index" bindtap="selectKR" data-kr-id="{{item.id}}">
+      <view class="card-item {{item.active ? 'active' : ''}}" wx:for="{{KRGroup}}" wx:key="index" bindtap="selectKR" data-kr-id="{{item._id}}">
         <view>{{item.content}}</view>
       </view>
     </view>
